@@ -1,12 +1,12 @@
 -- Заполнение таблицы Artists
-insert into artists(name) values
+INSERT INTO artists(name) VALUES
 ('Егор'),
 ('Кристина'),
 ('Антон'),
 ('Джиган');
 
 -- Заполнение таблицы Albums
-insert into albums (title, release_year) values
+INSERT INTO albums (title, release_year) VALUES
 ('Баллады', 2012),
 ('Зима', 2013),
 ('Темная ночь', 2000);
@@ -20,7 +20,8 @@ INSERT INTO Album_Artists (artists, albums) VALUES
 (2, 3);
 
 -- Заполнение таблицы Genres
-insert into genres(title) values ('Рок'),
+INSERT INTO genres(title) VALUES
+('Рок'),
 ('Поп'),
 ('Джаз');
 
@@ -33,7 +34,7 @@ INSERT INTO Artist_genres (Genres, Artists) VALUES
 (2, 4);
 
 -- Заполнение таблицы Tracks
-insert into Tracks (title, duration, albums) values
+INSERT INTO Tracks (title, duration, albums) VALUES
 ('Мой город', 240, 1),
 ('Снежинки', 180, 2),
 ('Звезды', 210, 1),

@@ -1,54 +1,54 @@
 -- Создание таблицы Artists
-create table if not exists Artists(
-	id serial primary key,
-	Name text not null
+CREATE TABLE IF NOT EXISTS Artists(
+	id SERIAL PRIMARY KEY,
+	Name TEXT NOT NULL
 );
 
 -- Создание таблицы Albums
-create table if not exists Albums(
-	id serial primary key,
-	Title text not null,
-	Release_year integer
+CREATE TABLE IF NOT EXISTS Albums(
+	id SERIAL PRIMARY KEY,
+	Title TEXT NOT NULL,
+	Release_year INTEGER
 );
 
 -- Сoздание таблицы Album_Artists (связь многие-ко-многим между Artists и Album)
-create table if not exists Album_Artists(
-	artists integer,
-	albums integer,
-	primary key (artists, albums),
-	foreign key (artists) references artists(id) on delete cascade,
-	foreign key (albums) references albums(id) on delete cascade
+CREATE TABLE IF NOT EXISTS Album_Artists(
+	artists INTEGER,
+	albums INTEGER,
+	PRIMARY KEY (artists, albums),
+	FOREIGN KEY (artists) REFERENCES artists(id) ON DELETE CASCADE,
+	FOREIGN KEY (albums) REFERENCES albums(id) ON DELETE CASCADE
 );
 
 -- Создание таблицы Genres
-create table if not exists Genres (
-	id serial primary key,
-	Title text not null unique
+CREATE TABLE IF NOT EXISTS Genres (
+	id SERIAL PRIMARY KEY,
+	Title TEXT NOT NULL UNIQUE
 );
 
 -- Создание таблицы Artists_Genres (связь многие-ко-многим между Artists и Genres)
-create table if not exists Artist_genres (
-	Genres integer,
-	Artists integer,
-	primary key (Genres, Artists),
-	foreign key (Genres) references Genres(id) on delete cascade,
-	foreign key (Artists) references Artists(id) on delete cascade
+CREATE TABLE IF NOT EXISTS Artist_genres (
+	Genres INTEGER,
+	Artists INTEGER,
+	PRIMARY KEY (Genres, Artists),
+	FOREIGN KEY (Genres) REFERENCES Genres(id) ON DELETE CASCADE,
+	FOREIGN KEY (Artists) REFERENCES Artists(id) ON DELETE CASCADE
 );
 
 -- Создание таблицы Tracks
-create table if not exists Tracks (
-	id serial primary key,
-	Title text not null,
-	Duration integer, -- в секундах
-	Albums integer,
-	foreign key (Albums) references Albums(id) on delete cascade
+CREATE TABLE IF NOT EXISTS Tracks (
+	id SERIAL PRIMARY KEY,
+	Title TEXT NOT NULL,
+	Duration INTEGER, -- в секундах
+	Albums INTEGER,
+	FOREIGN KEY (Albums) REFERENCES Albums(id) ON DELETE CASCADE
 );
 
 -- Создание таблицы Collections
-create table if not exists Collections (
-	id serial primary key,
-	Title text not null,
-	Release_year integer
+CREATE TABLE IF NOT EXISTS Collections (
+	id SERIAL PRIMARY KEY,
+	Title TEXT NOT NULL,
+	Release_year INTEGER
 );
 
 -- Создание таблицы Collection_Tracks (связь многие-ко-многим между Collections и Tracks)
