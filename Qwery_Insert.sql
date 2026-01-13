@@ -194,3 +194,60 @@ INSERT INTO Collection_Tracks (Track_id, Collection_id) VALUES
 -- Джаз классика (ID: 10)
 (1, 10),
 (6, 10);
+
+-- Подготовка данных к четвертому заданию
+
+-- Добавим исполнителя, который работает в нескольких жанрах
+INSERT INTO Artists (name) VALUES ('Борис Гребенщиков');
+
+-- Добавим связи исполнителя с несколькими жанрами
+INSERT INTO Artist_genres (Genres, Artists) VALUES
+(1, 14),
+(3, 14);
+
+-- Добавим альбом для этого исполнителя
+INSERT INTO Albums (title, release_year) VALUES ('Русский альбом', 2021);
+
+-- Добавим связь альбома с исполнителем
+INSERT INTO Album_Artists (artists, albums) VALUES (14, 9);
+
+-- Добавим треки в этот альбом
+INSERT INTO Tracks (title, duration, albums) VALUES
+('Город золотой', 180, 9),
+('Под небом голубым', 195, 9),
+('Сидя на красивом холме', 210, 9);
+
+-- Добавим исполнителя, который тоже работает в нескольких жанрах (уже есть Джиган с Поп и Джаз)
+-- Обновим Джигана - добавим еще жанр Рэп
+INSERT INTO Genres (title) VALUES ('Рэп') ON CONFLICT (title) DO NOTHING;
+
+-- Найдем ID жанра Рэп
+-- Затем добавим связь Джиган - Рэп
+INSERT INTO Artist_genres (Genres, Artists)
+SELECT g.id, 4
+FROM Genres g
+WHERE g.Title = 'Рэп'
+AND NOT EXISTS (
+    SELECT 1 FROM Artist_genres ag
+    WHERE ag.Genres = g.id AND ag.Artists = 4
+);
+
+-- Создадим несколько треков, которые НЕ входят в сборники
+INSERT INTO Tracks (title, duration, albums) VALUES
+('Неизвестный трек 1', 150, 1),
+('Редкая песня', 165, 2),
+('Бонус-трек', 140, 3);
+
+-- Добавим самый короткий трек
+INSERT INTO Tracks (title, duration, albums) VALUES
+('Короткий припев', 60, 1),
+('Интро', 45, 2);
+
+-- Создадим альбом с минимальным количеством треков
+INSERT INTO Albums (title, release_year) VALUES ('Мини-альбом', 2022);
+
+-- Добавим только 1 трек в этот альбом
+INSERT INTO Tracks (title, duration, albums) VALUES ('Единственный трек', 200, 10);
+
+-- Добавим связь альбома с исполнителем
+INSERT INTO Album_Artists (artists, albums) VALUES (1, 10);  
