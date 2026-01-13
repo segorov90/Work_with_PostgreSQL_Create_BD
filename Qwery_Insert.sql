@@ -91,3 +91,27 @@ INSERT INTO Collection_Tracks (Track_id, Collection_id) VALUES
 (4, 6),
 (6, 6),
 (7, 6);
+
+-- Подготовка таблицы к 3 заданию, добавление в таблицу недостающих данных
+-- 1. Добавим трек длительностью более 3,5 минут (210 секунд)
+INSERT INTO Tracks (title, duration, albums) VALUES
+('Моя любовь', 250, 1),  -- 4 минуты 10 секунд, содержит "мой"
+('My Way', 300, 2),      -- 5 минут, содержит "my"
+('Долгая дорога', 400, 3); -- 6 минут 40 секунд
+
+-- 2. Добавим сборники в период 2018-2020
+UPDATE Collections
+SET Release_year = 2018
+WHERE id = 5; -- Рок-коллекция теперь 2018
+
+UPDATE Collections
+SET Release_year = 2019
+WHERE id = 6; -- Поп-хиты теперь 2019
+
+INSERT INTO Collections (Title, Release_year) VALUES
+('Хиты 2020', 2020);
+
+-- 3. Добавим исполнителей с одним словом в имени
+INSERT INTO Artists (name) VALUES
+('Земфира'),
+('БИ-2');
