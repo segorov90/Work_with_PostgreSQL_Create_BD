@@ -1,214 +1,151 @@
+-- Задание № 2
 -- 1. Название и продолжительность самого длительного трека
 SELECT
-    Title AS "Название трека",
-    Duration AS "Продолжительность (сек)",
-    CONCAT(FLOOR(Duration / 60), ' мин ', Duration % 60, ' сек') AS "Продолжительность"
+    title AS "Название трека",
+    duration AS "Длительность (сек)"
 FROM Tracks
-WHERE Duration = (SELECT MAX(Duration) FROM Tracks);
+WHERE duration = (SELECT MAX(duration) FROM Tracks);
 
 -- 2. Название треков, продолжительность которых не менее 3,5 минут (210 секунд)
 SELECT
-    Title AS "Название трека",
-    Duration AS "Продолжительность (сек)",
-    CONCAT(FLOOR(Duration / 60), ' мин ', Duration % 60, ' сек') AS "Продолжительность"
+    title AS "Название трека",
+    duration AS "Длительность (сек)"
 FROM Tracks
-WHERE Duration >= 210
-ORDER BY Duration DESC;
+WHERE duration >= 210
+ORDER BY duration DESC;
 
 -- 3. Названия сборников, вышедших в период с 2018 по 2020 год включительно
 SELECT
-    Title AS "Название сборника",
-    Release_year AS "Год выпуска"
+    title AS "Название сборника",
+    release_year AS "Год выпуска"
 FROM Collections
-WHERE Release_year BETWEEN 2018 AND 2020
-ORDER BY Release_year;
+WHERE release_year BETWEEN 2018 AND 2020
+ORDER BY release_year;
 
 -- 4. Исполнители, чьё имя состоит из одного слова
 SELECT
-    Name AS "Исполнитель"
+    name AS "Исполнитель"
 FROM Artists
-WHERE Name NOT LIKE '% %'
-  AND Name NOT LIKE '%-%'
-  AND Name NOT LIKE '%''%'
-ORDER BY Name;
+WHERE name NOT LIKE '% %'
+   AND name NOT LIKE '%-%';
 
--- 5. Название треков, которые содержат слово «мой» или «my»
+-- 5. Название треков, которые содержат слово «мой» или «my» (как отдельные слова)
 SELECT
-    Title AS "Название трека",
-    Duration AS "Длительность (сек)"
+    title AS "Название трека",
+    duration AS "Длительность (сек)"
 FROM Tracks
-WHERE LOWER(Title) LIKE '%мой%'
-   OR LOWER(Title) LIKE '%my%'
-ORDER BY Title;
+WHERE (
+    LOWER(title) ~ '\m(my|мой)\M'
+    OR LOWER(title) IN ('my', 'мой')
+)
+ORDER BY title;
 
 -- Задание № 3
 
--- 1) Количество исполнителей в каждом жанре
+-- 1. Количество исполнителей в каждом жанре
 SELECT
-    g.Title AS "Жанр",
-    COUNT(ag.Artists) AS "Количество исполнителей"
+    g.title AS "Жанр",
+    COUNT(ag.artist_id) AS "Количество исполнителей"
 FROM Genres g
-LEFT JOIN Artist_genres ag ON g.id = ag.Genres
-GROUP BY g.id, g.Title
-ORDER BY COUNT(ag.Artists) DESC, g.Title;
+LEFT JOIN Artist_Genres ag ON g.id = ag.genre_id
+GROUP BY g.id, g.title
+ORDER BY COUNT(ag.artist_id) DESC;
 
--- 2) Количество треков, вошедших в альбомы 2019–2020 годов
+-- 2. Количество треков, вошедших в альбомы 2019–2020 годов
 SELECT
     COUNT(t.id) AS "Количество треков в альбомах 2019-2020"
 FROM Tracks t
-JOIN Albums a ON t.Albums = a.id
+JOIN Albums a ON t.album_id = a.id
 WHERE a.release_year BETWEEN 2019 AND 2020;
 
--- С более детальной информацией:
+-- 3. Средняя продолжительность треков по каждому альбому
 SELECT
-    a.Title AS "Альбом",
+    a.title AS "Альбом",
     a.release_year AS "Год выпуска",
+    ROUND(AVG(t.duration), 2) AS "Средняя продолжительность (сек)",
     COUNT(t.id) AS "Количество треков"
 FROM Albums a
-JOIN Tracks t ON a.id = t.Albums
-WHERE a.release_year BETWEEN 2019 AND 2020
-GROUP BY a.id, a.Title, a.release_year
+LEFT JOIN Tracks t ON a.id = t.album_id
+GROUP BY a.id, a.title, a.release_year
 ORDER BY a.release_year DESC;
 
--- 3) Средняя продолжительность треков по каждому альбому
-SELECT
-    a.Title AS "Альбом",
-    a.release_year AS "Год выпуска",
-    ROUND(AVG(t.Duration), 2) AS "Средняя продолжительность (сек)",
-    CONCAT(
-        FLOOR(ROUND(AVG(t.Duration), 0) / 60),
-        ' мин ',
-        ROUND(AVG(t.Duration), 0) % 60,
-        ' сек'
-    ) AS "Средняя продолжительность"
-FROM Albums a
-JOIN Tracks t ON a.id = t.Albums
-GROUP BY a.id, a.Title, a.release_year
-ORDER BY AVG(t.Duration) DESC;
-
--- 4) Все исполнители, которые не выпустили альбомы в 2020 году
-SELECT
-    ar.Name AS "Исполнитель",
-    STRING_AGG(DISTINCT a.Title, ', ') AS "Альбомы",
-    STRING_AGG(DISTINCT CAST(a.release_year AS TEXT), ', ') AS "Годы выпуска"
+-- 4. Все исполнители, которые не выпустили альбомы в 2020 году
+SELECT DISTINCT
+    ar.name AS "Исполнитель"
 FROM Artists ar
-LEFT JOIN Album_Artists aa ON ar.id = aa.artists
-LEFT JOIN Albums a ON aa.albums = a.id
 WHERE ar.id NOT IN (
-    SELECT DISTINCT aa2.artists
-    FROM Album_Artists aa2
-    JOIN Albums a2 ON aa2.albums = a2.id
-    WHERE a2.release_year = 2020
+    SELECT DISTINCT aa.artist_id
+    FROM Album_Artists aa
+    JOIN Albums al ON aa.album_id = al.id
+    WHERE al.release_year = 2020
 )
-GROUP BY ar.id, ar.Name
-ORDER BY ar.Name;
+ORDER BY ar.name;
 
--- 5) Названия сборников, в которых присутствует конкретный исполнитель
--- Выберем исполнителя "Леди Гага" (id = 10)
-SELECT
-    c.Title AS "Сборник",
-    c.Release_year AS "Год выпуска",
-    ar.Name AS "Исполнитель",
-    STRING_AGG(t.Title, ', ') AS "Треки в сборнике"
+-- 5. Названия сборников, в которых присутствует конкретный исполнитель (например, "Джиган" id = 4)
+SELECT DISTINCT
+    c.title AS "Сборник",
+    c.release_year AS "Год выпуска"
 FROM Collections c
-JOIN Collection_Tracks ct ON c.id = ct.Collection_id
-JOIN Tracks t ON ct.Track_id = t.id
-JOIN Albums a ON t.Albums = a.id
-JOIN Album_Artists aa ON a.id = aa.albums
-JOIN Artists ar ON aa.artists = ar.id
-WHERE ar.id = 10  -- ID Леди Гаги
-GROUP BY c.id, c.Title, c.Release_year, ar.Name
-ORDER BY c.Release_year DESC;
-
--- Для другого исполнителя (например, "Джиган" - id = 4)
-SELECT
-    c.Title AS "Сборник",
-    c.Release_year AS "Год выпуска сборника",
-    ar.Name AS "Исполнитель",
-    COUNT(t.id) AS "Количество треков"
-FROM Collections c
-JOIN Collection_Tracks ct ON c.id = ct.Collection_id
-JOIN Tracks t ON ct.Track_id = t.id
-JOIN Albums a ON t.Albums = a.id
-JOIN Album_Artists aa ON a.id = aa.albums
-JOIN Artists ar ON aa.artists = ar.id
-WHERE ar.id = 4  -- ID Джигана
-GROUP BY c.id, c.Title, c.Release_year, ar.Name
-ORDER BY c.Release_year DESC;
+JOIN Collection_Tracks ct ON c.id = ct.collection_id
+JOIN Tracks t ON ct.track_id = t.id
+JOIN Albums a ON t.album_id = a.id
+JOIN Album_Artists aa ON a.id = aa.album_id
+JOIN Artists ar ON aa.artist_id = ar.id
+WHERE ar.id = 4
+ORDER BY c.release_year;
 
 -- Задание № 4
 
--- 1) Названия альбомов, в которых присутствуют исполнители более чем одного жанра
+-- 1. Названия альбомов, в которых присутствуют исполнители более чем одного жанра
 SELECT DISTINCT
-    a.Title AS "Альбом",
-    a.release_year AS "Год выпуска",
-    STRING_AGG(DISTINCT ar.Name, ', ') AS "Исполнители",
-    STRING_AGG(DISTINCT g.Title, ', ') AS "Жанры исполнителей",
-    COUNT(DISTINCT g.id) AS "Количество жанров"
+    a.title AS "Альбом",
+    a.release_year AS "Год выпуска"
 FROM Albums a
-JOIN Album_Artists aa ON a.id = aa.albums
-JOIN Artists ar ON aa.artists = ar.id
-JOIN Artist_genres ag ON ar.id = ag.Artists
-JOIN Genres g ON ag.Genres = g.id
+JOIN Album_Artists aa ON a.id = aa.album_id
+JOIN Artists ar ON aa.artist_id = ar.id
 WHERE ar.id IN (
-    -- Исполнители с более чем одним жанром
-    SELECT Artists
-    FROM Artist_genres
-    GROUP BY Artists
-    HAVING COUNT(DISTINCT Genres) > 1
+    SELECT artist_id
+    FROM Artist_Genres
+    GROUP BY artist_id
+    HAVING COUNT(genre_id) > 1
 )
-GROUP BY a.id, a.Title, a.release_year
-HAVING COUNT(DISTINCT g.id) > 1
-ORDER BY a.Title;
+ORDER BY a.title;
 
--- 2) Наименования треков, которые не входят в сборники
+-- 2. Наименования треков, которые не входят в сборники
 SELECT
-    t.Title AS "Трек не в сборниках",
-    t.Duration AS "Длительность (сек)",
-    a.Title AS "Альбом",
-    ar.Name AS "Исполнитель"
+    t.title AS "Трек не в сборниках",
+    t.duration AS "Длительность (сек)"
 FROM Tracks t
-JOIN Albums a ON t.Albums = a.id
-JOIN Album_Artists aa ON a.id = aa.albums
-JOIN Artists ar ON aa.artists = ar.id
-WHERE t.id NOT IN (
-    SELECT DISTINCT Track_id
-    FROM Collection_Tracks
-)
-ORDER BY t.Title;
+LEFT JOIN Collection_Tracks ct ON t.id = ct.track_id
+WHERE ct.track_id IS NULL
+ORDER BY t.title;
 
--- 3) Исполнитель или исполнители, написавшие самый короткий по продолжительности трек
-SELECT
-    ar.Name AS "Исполнитель",
-    t.Title AS "Самый короткий трек",
-    t.Duration AS "Длительность (сек)",
-    CONCAT(t.Duration, ' сек (',
-           FLOOR(t.Duration / 60), ' мин ',
-           t.Duration % 60, ' сек)') AS "Форматированная длительность"
+-- 3. Исполнитель или исполнители, написавшие самый короткий по продолжительности трек
+SELECT DISTINCT
+    ar.name AS "Исполнитель",
+    t.title AS "Самый короткий трек",
+    t.duration AS "Длительность (сек)"
 FROM Tracks t
-JOIN Albums a ON t.Albums = a.id
-JOIN Album_Artists aa ON a.id = aa.albums
-JOIN Artists ar ON aa.artists = ar.id
-WHERE t.Duration = (SELECT MIN(Duration) FROM Tracks)
-ORDER BY ar.Name, t.Title;
+JOIN Albums a ON t.album_id = a.id
+JOIN Album_Artists aa ON a.id = aa.album_id
+JOIN Artists ar ON aa.artist_id = ar.id
+WHERE t.duration = (SELECT MIN(duration) FROM Tracks);
 
--- 4) Названия альбомов, содержащих наименьшее количество треков
+-- 4. Названия альбомов, содержащих наименьшее количество треков
 SELECT
-    a.Title AS "Альбом с минимальным числом треков",
+    a.title AS "Альбом",
     a.release_year AS "Год выпуска",
-    COUNT(t.id) AS "Количество треков",
-    STRING_AGG(t.Title, ', ') AS "Треки в альбоме"
+    COUNT(t.id) AS "Количество треков"
 FROM Albums a
-JOIN Tracks t ON a.id = t.Albums
-GROUP BY a.id, a.Title, a.release_year
+LEFT JOIN Tracks t ON a.id = t.album_id
+GROUP BY a.id, a.title, a.release_year
 HAVING COUNT(t.id) = (
-    -- Находим минимальное количество треков в альбомах
     SELECT MIN(track_count)
     FROM (
         SELECT COUNT(t2.id) as track_count
         FROM Albums a2
-        JOIN Tracks t2 ON a2.id = t2.Albums
+        LEFT JOIN Tracks t2 ON a2.id = t2.album_id
         GROUP BY a2.id
-    ) as album_tracks
+    ) AS album_tracks
 )
-ORDER BY a.Title;
+ORDER BY a.title;
