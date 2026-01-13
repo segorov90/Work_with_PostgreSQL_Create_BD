@@ -103,18 +103,6 @@ WHERE ar.id NOT IN (
 GROUP BY ar.id, ar.Name
 ORDER BY ar.Name;
 
--- Альтернативный вариант (проще):
-SELECT DISTINCT
-    ar.Name AS "Исполнитель"
-FROM Artists ar
-WHERE ar.id NOT IN (
-    SELECT DISTINCT aa.artists
-    FROM Album_Artists aa
-    JOIN Albums a ON aa.albums = a.id
-    WHERE a.release_year = 2020
-)
-ORDER BY ar.Name;
-
 -- 5) Названия сборников, в которых присутствует конкретный исполнитель
 -- Выберем исполнителя "Леди Гага" (id = 10)
 SELECT
@@ -147,3 +135,80 @@ JOIN Artists ar ON aa.artists = ar.id
 WHERE ar.id = 4  -- ID Джигана
 GROUP BY c.id, c.Title, c.Release_year, ar.Name
 ORDER BY c.Release_year DESC;
+
+-- Задание № 4
+
+-- 1) Названия альбомов, в которых присутствуют исполнители более чем одного жанра
+SELECT DISTINCT
+    a.Title AS "Альбом",
+    a.release_year AS "Год выпуска",
+    STRING_AGG(DISTINCT ar.Name, ', ') AS "Исполнители",
+    STRING_AGG(DISTINCT g.Title, ', ') AS "Жанры исполнителей",
+    COUNT(DISTINCT g.id) AS "Количество жанров"
+FROM Albums a
+JOIN Album_Artists aa ON a.id = aa.albums
+JOIN Artists ar ON aa.artists = ar.id
+JOIN Artist_genres ag ON ar.id = ag.Artists
+JOIN Genres g ON ag.Genres = g.id
+WHERE ar.id IN (
+    -- Исполнители с более чем одним жанром
+    SELECT Artists
+    FROM Artist_genres
+    GROUP BY Artists
+    HAVING COUNT(DISTINCT Genres) > 1
+)
+GROUP BY a.id, a.Title, a.release_year
+HAVING COUNT(DISTINCT g.id) > 1
+ORDER BY a.Title;
+
+-- 2) Наименования треков, которые не входят в сборники
+SELECT
+    t.Title AS "Трек не в сборниках",
+    t.Duration AS "Длительность (сек)",
+    a.Title AS "Альбом",
+    ar.Name AS "Исполнитель"
+FROM Tracks t
+JOIN Albums a ON t.Albums = a.id
+JOIN Album_Artists aa ON a.id = aa.albums
+JOIN Artists ar ON aa.artists = ar.id
+WHERE t.id NOT IN (
+    SELECT DISTINCT Track_id
+    FROM Collection_Tracks
+)
+ORDER BY t.Title;
+
+-- 3) Исполнитель или исполнители, написавшие самый короткий по продолжительности трек
+SELECT
+    ar.Name AS "Исполнитель",
+    t.Title AS "Самый короткий трек",
+    t.Duration AS "Длительность (сек)",
+    CONCAT(t.Duration, ' сек (',
+           FLOOR(t.Duration / 60), ' мин ',
+           t.Duration % 60, ' сек)') AS "Форматированная длительность"
+FROM Tracks t
+JOIN Albums a ON t.Albums = a.id
+JOIN Album_Artists aa ON a.id = aa.albums
+JOIN Artists ar ON aa.artists = ar.id
+WHERE t.Duration = (SELECT MIN(Duration) FROM Tracks)
+ORDER BY ar.Name, t.Title;
+
+-- 4) Названия альбомов, содержащих наименьшее количество треков
+SELECT
+    a.Title AS "Альбом с минимальным числом треков",
+    a.release_year AS "Год выпуска",
+    COUNT(t.id) AS "Количество треков",
+    STRING_AGG(t.Title, ', ') AS "Треки в альбоме"
+FROM Albums a
+JOIN Tracks t ON a.id = t.Albums
+GROUP BY a.id, a.Title, a.release_year
+HAVING COUNT(t.id) = (
+    -- Находим минимальное количество треков в альбомах
+    SELECT MIN(track_count)
+    FROM (
+        SELECT COUNT(t2.id) as track_count
+        FROM Albums a2
+        JOIN Tracks t2 ON a2.id = t2.Albums
+        GROUP BY a2.id
+    ) as album_tracks
+)
+ORDER BY a.Title;

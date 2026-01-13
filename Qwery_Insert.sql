@@ -250,4 +250,4 @@ INSERT INTO Albums (title, release_year) VALUES ('Мини-альбом', 2022);
 INSERT INTO Tracks (title, duration, albums) VALUES ('Единственный трек', 200, 10);
 
 -- Добавим связь альбома с исполнителем
-INSERT INTO Album_Artists (artists, albums) VALUES (1, 10);  
+INSERT INTO Album_Artists (artists, albums) VALUES (1, 10);
